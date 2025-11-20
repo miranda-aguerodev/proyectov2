@@ -1,0 +1,194 @@
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  padding-bottom: 6rem;
+}
+
+.page-area {
+  width: min(960px, 100%);
+  padding: 3rem clamp(1rem, 5vw, 2.5rem) 4rem;
+}
+
+.home-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.hero {
+  background: #0f172a;
+  border-radius: 20px;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  color: #f8fafc;
+  box-shadow: 0 25px 65px rgba(15, 23, 42, 0.35);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  font-size: 0.75rem;
+  color: #38bdf8;
+  margin-bottom: 0.75rem;
+}
+
+.status-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.75rem;
+  background-color: #fff;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.status-card h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  color: #0f172a;
+}
+
+.status-message {
+  font-size: 1.1rem;
+  margin: 0.75rem 0;
+  color: #1e293b;
+}
+
+.status-meta {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.status-hint {
+  font-size: 0.9rem;
+  color: #475569;
+  margin-top: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.75rem;
+  background-color: #fff;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.card h3 {
+  margin-top: 0;
+  color: #0f172a;
+}
+
+.checklist,
+.commands {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.checklist li,
+.commands li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.check-icon {
+  font-size: 1.25rem;
+}
+
+.item-title {
+  font-weight: 600;
+  margin: 0;
+  color: #0f172a;
+}
+
+.item-description {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.commands code {
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  display: inline-block;
+  font-size: 0.9rem;
+}
+
+.assets-card p {
+  margin: 0.5rem 0 0;
+  color: #1e293b;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .page-area {
+    padding: 2rem 1rem 3rem;
+  }
+
+  .hero {
+    text-align: left;
+  }
+}
+
+@media (min-width: 980px) {
+  .app-shell {
+    padding-bottom: 0;
+  }
+
+  .page-area {
+    padding: 3rem clamp(2rem, 6vw, 4rem);
+    margin-left: 140px;
+  }
+}
+
+.auth-gate {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, #131b2e, #0f172a);
+  color: #f8fafc;
+  padding: 2rem;
+}
+
+.auth-card {
+  max-width: 420px;
+  width: 100%;
+  background: rgba(11, 18, 34, 0.9);
+  border-radius: 20px;
+  padding: 2.5rem;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.auth-card h1 {
+  margin: 0 0 1rem;
+  font-size: 2rem;
+}
+
+.auth-card p {
+  margin-bottom: 2rem;
+  color: #d6e1ff;
+}
+
+.auth-card .primary {
+  width: 100%;
+}
+
+.auth-logo {
+  width: 120px;
+  height: auto;
+  margin-bottom: 1.5rem;
+}
