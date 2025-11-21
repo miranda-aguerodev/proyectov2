@@ -5,6 +5,7 @@ import likeIcon from '../../assets/images/review-section/like.svg'
 import dislikeIcon from '../../assets/images/review-section/dislike.svg'
 import commentIcon from '../../assets/images/review-section/comment.svg'
 import { formatLikesLabel, getRankByLikes } from '../../lib/rankings'
+import settingsIcon from '../../assets/images/profile/settings.svg'
 import './AuthScreen.css'
 import '../../navigation/pages/Feed.css'
 
@@ -698,16 +699,13 @@ const AuthScreen = () => {
           <div className="profile-top-row">
               <p className="profile-username">{profile?.username ?? '@configura-tu-user'}</p>
               <div className="profile-buttons">
-                <button className="secondary" type="button" onClick={openSettingsPanel}>
-                  Editar perfil
-                </button>
                 <button
                   className="icon-button"
                   type="button"
                   aria-label="Abrir configuración"
                   onClick={openSettingsPanel}
                 >
-                  <span aria-hidden="true">⚙️</span>
+                  <img src={settingsIcon} alt="" aria-hidden="true" />
                 </button>
                 {isAdmin && (
                   <button
