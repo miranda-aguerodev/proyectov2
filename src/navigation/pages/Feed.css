@@ -161,9 +161,10 @@
   left: 10px;
   right: 10px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
- background: linear-gradient(90deg, rgb(0 0 0 / 86%), rgb(24 24 24 / 78%));
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  background: linear-gradient(90deg, rgb(0 0 0 / 86%), rgb(24 24 24 / 78%));
   padding: 0.5rem 0.75rem;
   border-radius: 12px;
 }
@@ -172,6 +173,8 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .author-avatar {
@@ -213,9 +216,23 @@
   filter: drop-shadow(0 4px 12px rgba(15, 23, 42, 0.7));
 }
 
+.author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
 .author-name {
   margin: 0;
   font-weight: 700;
+}
+
+.author-handle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
 }
 
 .author-handle {
@@ -246,6 +263,16 @@
 .created {
   font-size: 0.8rem;
   color: #cbd5f5;
+  margin-left: auto;
+}
+
+.review-meta-top .follow-btn.compact {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.85rem;
+  background: rgba(58, 184, 155, 0.22);
+  border-color: rgba(58, 184, 155, 0.7);
+  color: #c7f9ec;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
 .review-body {

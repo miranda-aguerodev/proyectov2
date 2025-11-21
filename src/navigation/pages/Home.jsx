@@ -132,6 +132,7 @@ function ReviewCard({
   const likeCount = votes.filter((v) => v.type === 'like').length
   const dislikeCount = votes.filter((v) => v.type === 'dislike').length
   const commentsCount = commentsList?.length || 0
+  const canFollowAuthor = canInteract && author?.id && author?.id !== currentUserId
 
   useEffect(() => {
     const photo = review.review_images?.[0]?.image_url
@@ -172,9 +173,20 @@ function ReviewCard({
                 <img src={rankInfo.frame} alt="" aria-hidden="true" className="rank-frame" />
               )}
             </div>
-            <div>
+            <div className="author-info">
               <p className="author-name">{author.full_name || author.username || 'Usuario'}</p>
-              <p className="author-handle">{author.username || 'user'}</p>
+              <div className="author-handle-row">
+                <p className="author-handle">{author.username || 'user'}</p>
+                {canFollowAuthor && (
+                  <button
+                    type="button"
+                    className="follow-btn compact"
+                    onClick={() => onFollowToggle(author.id, isFollowing)}
+                  >
+                    {isFollowing ? 'Dejar de seguir' : 'Seguir'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           <span className="created">{created}</span>
@@ -225,15 +237,6 @@ function ReviewCard({
                 <img src={commentIcon} alt="" aria-hidden="true" />
                 <span>{commentsCount}</span>
               </button>
-              {canInteract && author?.id && author?.id !== currentUserId && (
-                <button
-                  type="button"
-                  className="follow-btn"
-                  onClick={() => onFollowToggle(author.id, isFollowing)}
-                >
-                  {isFollowing ? 'Dejar de seguir' : 'Seguir'}
-                </button>
-              )}
               <input
                 type="text"
                 placeholder="Comenta..."
