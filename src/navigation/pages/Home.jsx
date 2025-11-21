@@ -225,11 +225,11 @@ function ReviewCard({
               <span>{dislikeCount}</span>
             </button>
             <div className="comment-block">
-            <button
-              type="button"
-              className="pill comment"
-              onClick={() => {
-                onToggleComments(review.id)
+              <button
+                type="button"
+                className="pill comment"
+                onClick={() => {
+                  onToggleComments(review.id)
                   onLoadComments(review.id)
                 }}
                 disabled={commentsLoading}
@@ -237,19 +237,6 @@ function ReviewCard({
                 <img src={commentIcon} alt="" aria-hidden="true" />
                 <span>{commentsCount}</span>
               </button>
-              <input
-                type="text"
-                placeholder="Comenta..."
-                value={commentDraft || ''}
-                onChange={(e) => setCommentDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    onComment(review.id, commentDraft?.trim() || '')
-                  }
-                }}
-                disabled={!canInteract}
-              />
             </div>
             {isAdmin && (
               <div className="admin-actions-row">

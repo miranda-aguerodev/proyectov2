@@ -384,12 +384,12 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  flex: 1;
-  min-width: 180px;
+  flex: 0 0 auto;
 }
 
 .comment-block input {
   flex: 1;
+  min-width: 170px;
   background: #0b1222;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
