@@ -15,7 +15,7 @@
 }
 .create-card p {
   margin-top: 10px;
-  color: #dedede
+  color: rgb(131, 137, 150)
 }
 
 .create-overlay {
@@ -104,7 +104,7 @@
   padding: 0.85rem 1rem;
   font-size: 0.95rem;
   font-family: inherit;
-  color: #0f172a;
+  color: #4750af;
 }
 
 .photo-preview {
@@ -135,7 +135,7 @@
   padding: 0.75rem 0.85rem;
   border-radius: 10px;
   border: 1px solid #cbd5f5;
-  background: #fff;
+  background: #101b31;
   cursor: pointer;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -148,7 +148,7 @@
 .place-name {
   margin: 0;
   font-weight: 700;
-  color: #0f172a;
+  color: #303644;
 }
 
 .distance {
@@ -228,6 +228,7 @@
 
 .muted.small {
   font-size: 0.85rem;
+  color: #dedede;
 }
 
 .muted.error {

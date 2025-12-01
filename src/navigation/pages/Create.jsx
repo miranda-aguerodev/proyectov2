@@ -338,7 +338,7 @@ function CreatePage() {
   return (
     <section className="create-card">
       <h2>Crea una nueva reseña</h2>
-      <p>Selecciona un lugar en el mapa, elige un punto cercano y describe tu experiencia.</p>
+      <p  >Selecciona un lugar en el mapa, elige un punto cercano y describe tu experiencia.</p>
       <button className="primary" type="button" onClick={() => setModalOpen(true)}>
         Crear reseña
       </button>
