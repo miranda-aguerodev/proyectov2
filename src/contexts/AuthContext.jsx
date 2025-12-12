@@ -1,3 +1,4 @@
+// src/contexts/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
@@ -8,6 +9,7 @@ const AuthContext = createContext({
   loginWithGoogle: async () => {},
   logout: async () => {},
   saveProfile: async () => {},
+  signUpWithEmail: async () => ({ data: null, error: null }),
 })
 
 export const AuthProvider = ({ children }) => {
@@ -37,14 +39,29 @@ export const AuthProvider = ({ children }) => {
   }
 
   useEffect(() => {
-    const init = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+    let cancelled = false
 
-      setUser(session?.user ?? null)
-      await fetchProfile(session?.user?.id ?? null)
-      setLoading(false)
+    const init = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession()
+
+        if (error) {
+          console.error('Error obteniendo sesión inicial', error)
+        }
+
+        const currentUser = data?.session?.user ?? null
+
+        if (!cancelled) {
+          setUser(currentUser)
+          await fetchProfile(currentUser?.id ?? null)
+        }
+      } catch (err) {
+        console.error('Error inesperado en init()', err)
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
     }
 
     init()
@@ -55,9 +72,11 @@ export const AuthProvider = ({ children }) => {
       const nextUser = session?.user ?? null
       setUser(nextUser)
       fetchProfile(nextUser?.id ?? null)
+      setLoading(false)
     })
 
     return () => {
+      cancelled = true
       subscription.unsubscribe()
     }
   }, [])
@@ -83,7 +102,55 @@ export const AuthProvider = ({ children }) => {
       },
     })
 
-  const logout = () => supabase.auth.signOut()
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.warn('[Auth] Error al cerrar sesión', err)
+    }
+    setUser(null)
+    setProfile(null)
+  }
+
+  // Registro con correo + contraseña que crea perfil en `profiles`
+  const signUpWithEmail = async (email, password, fullName) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName || null,
+        },
+      },
+    })
+
+    if (error) {
+      console.error('Error en signUp:', error)
+      return { data: null, error }
+    }
+
+    const createdUser = data.user
+
+    if (createdUser) {
+      const { id } = createdUser
+
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id,
+        full_name: fullName || null,
+        username: null,
+        avatar_url: null,
+        reputation_score: 0,
+        reputation_level: 'novato',
+      })
+
+      if (profileError) {
+        console.error('Error creando perfil:', profileError)
+        return { data, error: profileError }
+      }
+    }
+
+    return { data, error: null }
+  }
 
   const saveProfile = async ({ username, fullName, avatarUrl }) => {
     if (!user) {
@@ -134,7 +201,15 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, loginWithGoogle, logout, saveProfile }}
+      value={{
+        user,
+        profile,
+        loading,
+        loginWithGoogle,
+        logout,
+        saveProfile,
+        signUpWithEmail,
+      }}
     >
       {children}
     </AuthContext.Provider>

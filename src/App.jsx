@@ -1,3 +1,4 @@
+// src/App.jsx
 import { useEffect, useState } from 'react'
 import './App.css'
 import NavBar from './navigation/NavBar'
@@ -6,9 +7,10 @@ import SearchPage from './navigation/pages/Search'
 import CreatePage from './navigation/pages/Create'
 import MapPage from './navigation/pages/Map'
 import UserPage from './navigation/pages/User'
+import ReviewDetailPage from './navigation/pages/ReviewDetail'
 import { supabase } from './lib/supabaseClient'
 import { useAuth } from './contexts/AuthContext'
-import luggoLogo from './assets/images/icono LugGO/luggo.svg'
+import LoginPage from './navigation/pages/LoginPage'  // 👈 IMPORTANTE
 
 const pages = {
   home: HomePage,
@@ -16,10 +18,11 @@ const pages = {
   create: CreatePage,
   map: MapPage,
   user: UserPage,
+  review: ReviewDetailPage,
 }
 
 function App() {
-  const { user, loading, loginWithGoogle } = useAuth()
+  const { user, loading } = useAuth()
   const [activePage, setActivePage] = useState(() => {
     const flag = localStorage.getItem('goToUser')
     if (flag) {
@@ -54,19 +57,9 @@ function App() {
     )
   }
 
+  // 👇 AHORA, si no hay user, usamos LoginPage
   if (!user) {
-    return (
-      <div className="auth-gate">
-        <div className="auth-card">
-          <img src={luggoLogo} alt="LugGO" className="auth-logo" />
-          <h1>LugGO</h1>
-          <p>Inicia sesión con Google para unirte y compartir reseñas.</p>
-          <button className="primary" type="button" onClick={loginWithGoogle}>
-            Entrar con Google
-          </button>
-        </div>
-      </div>
-    )
+    return <LoginPage />
   }
 
   return (
@@ -75,7 +68,7 @@ function App() {
         <CurrentPage />
       </main>
 
-        <NavBar activePage={activePage} onNavigate={setActivePage} />
+      <NavBar activePage={activePage} onNavigate={setActivePage} />
     </div>
   )
 }

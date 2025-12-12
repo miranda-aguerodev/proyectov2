@@ -224,16 +224,41 @@
   flex-direction: column;
 }
 
+/* ---- IMAGEN DE LA TARJETA ---- */
+
 .review-image {
   position: relative;
-  height: 220px;
+  width: 100%;
+  aspect-ratio: 16 / 9;              /* proporción tipo banner */
+  overflow: hidden;
+  background: radial-gradient(circle at top, #1f2937, #020617);
 }
 
-.review-image img {
+/* usamos la clase que pusimos en el JSX: review-photo */
+.review-image .review-photo {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover;                 /* recorta sin deformar */
+  display: block;
+  transform: scale(1.02);
+  opacity: 0;
+  filter: blur(4px);
+  transition:
+    transform 200ms ease-out,
+    opacity 200ms ease-out,
+    filter 200ms ease-out;
 }
+
+.review-image .review-photo.loaded {
+  opacity: 1;
+  filter: blur(0);
+}
+
+.review-card:hover .review-image .review-photo.loaded {
+  transform: scale(1.06);
+}
+
+/* -------------------------------- */
 
 .review-meta-top {
   position: absolute;

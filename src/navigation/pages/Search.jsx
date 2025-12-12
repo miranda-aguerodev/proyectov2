@@ -1,3 +1,4 @@
+// src/navigation/pages/Search.jsx
 import { useEffect, useMemo, useState } from 'react'
 import L from 'leaflet'
 import { MapContainer, Marker, Polyline, TileLayer } from 'react-leaflet'
@@ -12,6 +13,7 @@ import dislikeIcon from '../../assets/images/review-section/dislike.svg'
 import commentIcon from '../../assets/images/review-section/comment.svg'
 import pinIconImg from '../../assets/images/maps-icons/pin.svg'
 import userIconImg from '../../assets/images/maps-icons/yourlocation.svg'
+import ReviewDetail from './ReviewDetail'
 
 const DEFAULT_POS = { lat: 9.9281, lng: -84.0907 }
 
@@ -90,6 +92,7 @@ function SearchPage() {
   const [profileLikeTotals, setProfileLikeTotals] = useState({})
   const [cacheReady, setCacheReady] = useState(false)
   const [userPos, setUserPos] = useState(null)
+  const [selectedReviewId, setSelectedReviewId] = useState(null) // 👈 para detalle
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -269,15 +272,18 @@ function SearchPage() {
           const authorId = review.profiles?.id
           const authorLikes = authorId ? profileLikeTotals[authorId] || 0 : 0
           const rankInfo = getRankByLikes(authorLikes)
-          const initialsSeed =
-            (review.profiles?.full_name ||
-              review.profiles?.username ||
-              'U')
-              .replace(/^@+/, '')
+          const initialsSeed = (
+            review.profiles?.full_name ||
+            review.profiles?.username ||
+            'U'
+          ).replace(/^@+/, '')
           const initial = initialsSeed.charAt(0).toUpperCase()
+          const likesCount = review.votes?.filter((v) => v.type === 'like').length || 0
+          const dislikesCount = review.votes?.filter((v) => v.type === 'dislike').length || 0
+
           return (
             <article key={review.id} className="review-card search-result-card">
-              <div className="review-image">
+              <div className="review-image" onClick={() => setSelectedReviewId(review.id)} style={{ cursor: 'pointer' }}>
                 <img src={coverImage} alt={review.places?.name || 'Lugar'} />
                 <div className="review-meta-top">
                   <div className="author">
@@ -307,7 +313,12 @@ function SearchPage() {
                 </div>
               </div>
               <div className="review-body">
-                <h3>{review.places?.name || 'Lugar sin nombre'}</h3>
+                <h3
+                  onClick={() => setSelectedReviewId(review.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {review.places?.name || 'Lugar sin nombre'}
+                </h3>
                 <p className="description">{review.content || 'Sin descripción'}</p>
                 <Stars value={review.rating || 0} />
                 {review.review_hashtags?.length > 0 && (
@@ -320,9 +331,39 @@ function SearchPage() {
                       ))}
                   </div>
                 )}
-                <button className="secondary" type="button" onClick={() => handleSelectReview(review)}>
-                  Ver en mapa
-                </button>
+
+                <div className="action-row">
+                  <div className="pill like">
+                    <img src={likeIcon} alt="" />
+                    <span>{likesCount}</span>
+                  </div>
+                  <div className="pill dislike">
+                    <img src={dislikeIcon} alt="" />
+                    <span>{dislikesCount}</span>
+                  </div>
+                  <div className="pill comment">
+                    <img src={commentIcon} alt="" />
+                    {/* en search no cargamos comentarios, solo mostramos ícono */}
+                    <span>Ver</span>
+                  </div>
+                </div>
+
+                <div className="result-actions">
+                  <button
+                    className="secondary"
+                    type="button"
+                    onClick={() => handleSelectReview(review)}
+                  >
+                    Ver en mapa
+                  </button>
+                  <button
+                    className="primary small"
+                    type="button"
+                    onClick={() => setSelectedReviewId(review.id)}
+                  >
+                    Ver detalle
+                  </button>
+                </div>
               </div>
             </article>
           )
@@ -348,7 +389,12 @@ function SearchPage() {
           </div>
 
           <div className="search-map-wrapper">
-            <MapContainer center={center} zoom={13} scrollWheelZoom key={`${center.lat}-${center.lng}`}>
+            <MapContainer
+              center={center}
+              zoom={13}
+              scrollWheelZoom
+              key={`${center.lat}-${center.lng}`}
+            >
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -356,14 +402,26 @@ function SearchPage() {
               {userPos && <Marker position={userPos} icon={userLocationIcon} />}
               {selectedReview?.places?.latitude && (
                 <Marker
-                  position={{ lat: selectedReview.places.latitude, lng: selectedReview.places.longitude }}
+                  position={{
+                    lat: selectedReview.places.latitude,
+                    lng: selectedReview.places.longitude,
+                  }}
                   icon={placePinIcon}
                 />
               )}
-              {routeCoords.length > 1 && <Polyline positions={routeCoords} color="#38bdf8" weight={5} />}
+              {routeCoords.length > 1 && (
+                <Polyline positions={routeCoords} color="#38bdf8" weight={5} />
+              )}
             </MapContainer>
           </div>
         </div>
+      )}
+
+      {selectedReviewId && (
+        <ReviewDetail
+          reviewId={selectedReviewId}
+          onClose={() => setSelectedReviewId(null)}
+        />
       )}
     </section>
   )

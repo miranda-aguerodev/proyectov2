@@ -86,11 +86,13 @@ function CreatePage() {
   const [osmPlaces, setOsmPlaces] = useState([])
   const [osmLoading, setOsmLoading] = useState(false)
   const [osmError, setOsmError] = useState('')
+  const [showPlacesList, setShowPlacesList] = useState(true)
 
   const handlePlaceSelect = (place) => {
     setSelectedPlaceId(place.id)
     setSelectedPlace(place)
     setSelectedPos({ lat: place.latitude, lng: place.longitude })
+    setShowPlacesList(false) // solo mostrar el lugar elegido
   }
 
   useEffect(() => {
@@ -144,7 +146,7 @@ function CreatePage() {
     setHashtags([...new Set(tags)])
   }, [hashtagsInput])
 
-  // Busca lugares OSM a 75m del punto seleccionado o la ubicación del usuario
+  // Busca lugares OSM alrededor del punto seleccionado o la ubicación del usuario
   useEffect(() => {
     const anchor = selectedPos || userPos
     if (!anchor) return
@@ -166,23 +168,36 @@ function CreatePage() {
           method: 'POST',
           body: query,
         })
-        if (!resp.ok) throw new Error('No se pudo consultar lugares OSM')
+        if (!resp.ok) throw new Error('No se pudo consultar lugares cercanos')
         const data = await resp.json()
         const elements = Array.isArray(data?.elements) ? data.elements : []
+
         const mapped = elements
           .map((el) => {
             const lat = el.lat || el.center?.lat
             const lng = el.lon || el.center?.lon
-            if (!lat || !lng || !el.tags?.name) return null
+            const tags = el.tags || {}
+
+            if (!lat || !lng || !tags.name) return null
+
+            // Filtrar calles/avenidas y elementos de carretera
+            if (tags.highway) return null
+            if (/^(calle|avenida|ruta|carretera)/i.test(tags.name)) return null
+
+            const street = tags['addr:street'] || ''
+            const number = tags['addr:housenumber'] || ''
+            const fullAddress = [street, number].filter(Boolean).join(' ')
+
             return {
               id: `osm-${el.type}-${el.id}`,
-              name: el.tags.name,
-              address: el.tags['addr:street'] || el.tags['addr:full'] || '',
+              name: tags.name,
+              address: fullAddress,
               latitude: lat,
               longitude: lng,
             }
           })
           .filter(Boolean)
+
         setOsmPlaces(mapped)
       } catch (error) {
         setOsmError(error?.message ?? 'No se pudieron cargar lugares cercanos.')
@@ -206,7 +221,7 @@ function CreatePage() {
       .filter((p) => p.distance <= 0.125) // 125 metros
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 5)
-  }, [selectedPos, userPos, places])
+  }, [selectedPos, userPos, places, osmPlaces])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -225,7 +240,6 @@ function CreatePage() {
       // Si es un lugar OSM, crear registro en places
       let placeId = selectedPlaceId
       if (String(selectedPlaceId).startsWith('osm-')) {
-        // Reusa el lugar si ya existe con el mismo nombre/coords
         const { data: existingPlace } = await supabase
           .from('places')
           .select('id')
@@ -272,7 +286,6 @@ function CreatePage() {
           .select('id')
           .maybeSingle()
         if (error) {
-          // si ya existe, recupéralo
           const { data: existing, error: existingErr } = await supabase
             .from('hashtags')
             .select('id')
@@ -284,7 +297,6 @@ function CreatePage() {
         return data
       }
 
-      // Hashtags: upsert y pivot
       if (hashtags.length) {
         for (const tag of hashtags) {
           const hashRow = await upsertHashtag(tag)
@@ -298,7 +310,6 @@ function CreatePage() {
         }
       }
 
-      // Imagen opcional
       if (photoFile) {
         const ext = photoFile.name.split('.').pop()?.toLowerCase() || 'jpg'
         const path = `reviews/${reviewId}/photo-${Date.now()}.${ext}`
@@ -326,6 +337,7 @@ function CreatePage() {
       setRating(0)
       setPhotoFile(null)
       setPhotoPreview('')
+      setShowPlacesList(true)
     } catch (err) {
       setSubmitError(err?.message ?? 'No se pudo publicar la reseña.')
     } finally {
@@ -338,7 +350,7 @@ function CreatePage() {
   return (
     <section className="create-card">
       <h2>Crea una nueva reseña</h2>
-      <p  >Selecciona un lugar en el mapa, elige un punto cercano y describe tu experiencia.</p>
+      <p>Selecciona un lugar en el mapa, elige un punto cercano y describe tu experiencia.</p>
       <button className="primary" type="button" onClick={() => setModalOpen(true)}>
         Crear reseña
       </button>
@@ -375,37 +387,73 @@ function CreatePage() {
                 <form className="review-form" onSubmit={handleSubmit}>
                   <div className="field">
                     <label>Lugar cercano</label>
-                    {loadingPlaces || osmLoading ? (
-                      <p className="muted small">Cargando lugares...</p>
-                    ) : nearestPlaces.length === 0 ? (
-                      <p className="muted small">
-                        Toca el mapa para mostrar lugares cercanos (radio 75 m). No se encontraron
-                        lugares registrados en esa zona.
-                      </p>
+
+                    {showPlacesList ? (
+                      <>
+                        {loadingPlaces || osmLoading ? (
+                          <p className="muted small">Cargando lugares...</p>
+                        ) : placesError || osmError ? (
+                          <p className="muted small error">
+                            {placesError || osmError}
+                          </p>
+                        ) : nearestPlaces.length === 0 ? (
+                          <p className="muted small">
+                            Toca el mapa para mostrar lugares cercanos (radio 125 m). No se
+                            encontraron lugares registrados en esa zona.
+                          </p>
+                        ) : (
+                          <div className="places-list">
+                            {nearestPlaces.map((p) => (
+                              <button
+                                type="button"
+                                key={p.id}
+                                className={`place-item ${
+                                  selectedPlaceId === p.id ? 'selected' : ''
+                                }`}
+                                onClick={() => handlePlaceSelect(p)}
+                              >
+                                <div>
+                                  <p className="place-name">{p.name}</p>
+                                  <p className="muted small">
+                                    {p.address || 'Sin dirección'}
+                                  </p>
+                                </div>
+                                <span className="distance">
+                                  {(p.distance * 1000).toFixed(0)} m
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
                     ) : (
-                      <div className="places-list">
-                        {nearestPlaces.map((p) => (
+                      <>
+                        {selectedPlace ? (
+                          <div className="selected-place-card">
+                            <p className="place-name">{selectedPlace.name}</p>
+                            <p className="muted small">
+                              {selectedPlace.address || 'Sin dirección'} ·{' '}
+                              {selectedPlace.latitude.toFixed(5)},&nbsp;
+                              {selectedPlace.longitude.toFixed(5)}
+                            </p>
+                            <button
+                              type="button"
+                              className="text-link"
+                              onClick={() => setShowPlacesList(true)}
+                            >
+                              Ver otros lugares cercanos
+                            </button>
+                          </div>
+                        ) : (
                           <button
                             type="button"
-                            key={p.id}
-                            className={`place-item ${selectedPlaceId === p.id ? 'selected' : ''}`}
-                            onClick={() => handlePlaceSelect(p)}
+                            className="text-link"
+                            onClick={() => setShowPlacesList(true)}
                           >
-                            <div>
-                              <p className="place-name">{p.name}</p>
-                              <p className="muted small">{p.address || 'Sin dirección'}</p>
-                            </div>
-                            <span className="distance">{(p.distance * 1000).toFixed(0)} m</span>
+                            Ver lugares cercanos
                           </button>
-                        ))}
-                      </div>
-                    )}
-                    {selectedPlace && (
-                      <p className="muted small">
-                        Seleccionado: <strong>{selectedPlace.name}</strong> ·{' '}
-                        {selectedPlace.address || 'Sin dirección'} · {selectedPlace.latitude.toFixed(5)},{' '}
-                        {selectedPlace.longitude.toFixed(5)}
-                      </p>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -462,7 +510,9 @@ function CreatePage() {
                       </div>
                     )}
                   </div>
+
                   {submitError && <p className="muted small error">{submitError}</p>}
+
                   <button
                     className="primary"
                     type="submit"

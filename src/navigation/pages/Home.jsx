@@ -6,6 +6,7 @@ import dislikeIcon from '../../assets/images/review-section/dislike.svg'
 import commentIcon from '../../assets/images/review-section/comment.svg'
 import { formatLikesLabel, useRankByLikes } from '../../lib/rankings'
 import './Feed.css'
+import ReviewDetail from './ReviewDetail'
 
 const fallbackImage =
   'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80'
@@ -113,9 +114,12 @@ function ReviewCard({
   onFollowToggle,
   isAdmin,
   onAdminDelete,
+  onOpenDetail, // 👈 nuevo
 }) {
   const [photoUrl, setPhotoUrl] = useState(fallbackImage)
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [imageLoaded, setImageLoaded] = useState(false)
+
   const author = useMemo(() => review.profiles || {}, [review.profiles])
   const authorAvatar = author.avatar_url || ''
   const rankInfo = useRankByLikes(totalLikes)
@@ -151,6 +155,8 @@ function ReviewCard({
       } catch {
         setPhotoUrl(photo || fallbackImage)
         setAvatarUrl(avatar || '')
+      } finally {
+        setImageLoaded(false)
       }
     }
 
@@ -159,8 +165,14 @@ function ReviewCard({
 
   return (
     <article className="review-card">
-      <div className="review-image">
-        <img src={photoUrl} alt={place.name || 'Lugar'} loading="lazy" />
+      <div className="review-image" onClick={onOpenDetail} style={{ cursor: 'pointer' }}>
+        <img
+          src={photoUrl}
+          alt={place.name || 'Lugar'}
+          loading="lazy"
+          className={`review-photo ${imageLoaded ? 'loaded' : ''}`}
+          onLoad={() => setImageLoaded(true)}
+        />
         <div className="review-meta-top">
           <div className="author">
             <div className="author-avatar">
@@ -181,7 +193,10 @@ function ReviewCard({
                   <button
                     type="button"
                     className="follow-btn compact"
-                    onClick={() => onFollowToggle(author.id, isFollowing)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onFollowToggle(author.id, isFollowing)
+                    }}
                   >
                     {isFollowing ? 'Dejar de seguir' : 'Seguir'}
                   </button>
@@ -194,7 +209,12 @@ function ReviewCard({
       </div>
 
       <div className="review-body">
-        <h3>{place.name || 'Lugar sin nombre'}</h3>
+        <h3
+          onClick={onOpenDetail}
+          style={{ cursor: 'pointer' }}
+        >
+          {place.name || 'Lugar sin nombre'}
+        </h3>
         <p className="description">{review.content || 'Sin descripción'}</p>
         <Stars value={review.rating || 0} />
         {tags.length > 0 && (
@@ -264,7 +284,10 @@ function ReviewCard({
                         <img src={c.profiles.avatar_url} alt={c.profiles.username || 'avatar'} />
                       ) : (
                         <span className="comment-initial">
-                          {(c.profiles?.username || 'U').replace(/^@+/, '').charAt(0).toUpperCase()}
+                          {(c.profiles?.username || 'U')
+                            .replace(/^@+/, '')
+                            .charAt(0)
+                            .toUpperCase()}
                         </span>
                       )}
                     </div>
@@ -341,6 +364,7 @@ function HomePage() {
   const [userSearchPerformed, setUserSearchPerformed] = useState(false)
   const [selectedProfile, setSelectedProfile] = useState(null)
   const [selectedProfileAvatar, setSelectedProfileAvatar] = useState('')
+  const [selectedReviewId, setSelectedReviewId] = useState(null) // 👈 para el detalle
 
   const userId = user?.id
   const currentUsername = profile?.username || ''
@@ -406,7 +430,6 @@ function HomePage() {
     }
     loadFollows()
   }, [userId])
-
 
   useEffect(() => {
     let isMounted = true
@@ -599,8 +622,10 @@ function HomePage() {
   }
 
   const loadComments = async (reviewId) => {
-    // evita recargar si ya están
-    if (openComments[reviewId] && (reviews.find((r) => r.id === reviewId)?.review_comments?.length || 0) > 0) {
+    if (
+      openComments[reviewId] &&
+      (reviews.find((r) => r.id === reviewId)?.review_comments?.length || 0) > 0
+    ) {
       return
     }
     setLoadingComments((prev) => ({ ...prev, [reviewId]: true }))
@@ -843,9 +868,17 @@ function HomePage() {
             onFollowToggle={handleFollowToggle}
             isAdmin={isAdmin}
             onAdminDelete={handleAdminDelete}
+            onOpenDetail={() => setSelectedReviewId(rev.id)} // 👈 abre detalle
           />
         ))}
       </div>
+
+      {selectedReviewId && (
+        <ReviewDetail
+          reviewId={selectedReviewId}
+          onClose={() => setSelectedReviewId(null)}
+        />
+      )}
     </div>
   )
 }
